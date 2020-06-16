@@ -11,7 +11,17 @@ const signing = require('./signing');
  *   - have been modified since signing
  */
 const isValidTransaction = transaction => {
-  // Enter your solution here
+  if (transaction.amount < 0) {
+    return false;
+  }
+ 
+
+  const toSign = transaction.source
+    + transaction.recipient
+    + transaction.amount;
+
+  return signing.verify(transaction.source, toSign, transaction.signature);
+
 
 };
 
@@ -38,6 +48,28 @@ const isValidBlock = block => {
  */
 const isValidChain = blockchain => {
   // Your code here
+  const realGenesis = JSON.stringify(this.createGenesisBlock());
+
+  if (realGenesis !== JSON.stringify(this.chain[0])) {
+    return false;
+  }
+
+  // Check the remaining blocks on the chain to see if there hashes and
+  // signatures are correct
+  for (let i = 1; i < this.chain.length; i++) {
+    const currentBlock = this.chain[i];
+
+    if (!currentBlock.hasValidTransactions()) {
+      return false;
+    }
+
+    if (currentBlock.hash !== currentBlock.calculateHash()) {
+      return false;
+    }
+  }
+
+  return true;
+
 
 };
 
