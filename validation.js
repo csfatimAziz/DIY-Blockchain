@@ -32,7 +32,15 @@ const isValidTransaction = transaction => {
  *   - they contain any invalid transactions
  */
 const isValidBlock = block => {
-  // Your code here
+  const transactionString = block.transactions.map(t => t.signature).join('');
+  const toHash = block.previousHash + transactionString + block.nonce;
+
+  if (block.hash !== createHash('sha512').update(toHash).digest('hex')) {
+    return false;
+  }
+  
+
+  return block.transactions.every(isValidTransaction);
 
 };
 
@@ -47,28 +55,25 @@ const isValidBlock = block => {
  *   - contains any invalid transactions
  */
 const isValidChain = blockchain => {
-  // Your code here
-  const realGenesis = JSON.stringify(this.createGenesisBlock());
+  const { blocks } = blockchain;
 
-  if (realGenesis !== JSON.stringify(this.chain[0])) {
+  if (blocks[0].previousHash !== null) {
+    return false;
+  }
+  // Your code here
+
+  if (blocks.slice(1).some((b, i) => b.previousHash !== blocks[i].hash)) {
     return false;
   }
 
-  // Check the remaining blocks on the chain to see if there hashes and
-  // signatures are correct
-  for (let i = 1; i < this.chain.length; i++) {
-    const currentBlock = this.chain[i];
-
-    if (!currentBlock.hasValidTransactions()) {
-      return false;
-    }
-
-    if (currentBlock.hash !== currentBlock.calculateHash()) {
-      return false;
-    }
+  if (blocks.some(b => !isValidBlock(b))) {
+    return false;
   }
 
-  return true;
+  return blocks
+    .map(b => b.transactions)
+    .reduce((flat, txns) => flat.concat(txns), [])
+    .every(isValidTransaction);
 
 
 };
@@ -79,7 +84,7 @@ const isValidChain = blockchain => {
  * (in theory) make the blockchain fail later validation checks;
  */
 const breakChain = blockchain => {
-  // Your code here
+  blockchain.blocks[1].transactions[0].amount = 1000000000;
 
 };
 
